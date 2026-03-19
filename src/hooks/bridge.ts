@@ -565,15 +565,6 @@ async function processKeywordDetector(input: HookInput): Promise<HookOutput> {
     messages.push(PROMPT_TRANSLATION_MESSAGE);
   }
 
-  // Wake OpenClaw gateway for keyword-detector (non-blocking, fires for all prompts)
-  if (input.sessionId) {
-    _openclaw.wake("keyword-detector", {
-      sessionId: input.sessionId,
-      projectPath: directory,
-      prompt: cleanedText,
-    });
-  }
-
   if (keywords.length === 0) {
     if (messages.length > 0) {
       return { continue: true, message: messages.join("\n\n---\n\n") };
@@ -808,9 +799,6 @@ async function processPersistentMode(input: HookInput): Promise<HookOutput> {
         stopContext.stop_reason === "context_limit" ||
         stopContext.stopReason === "context_limit";
       if (!isAbort && !isContextLimit) {
-        // Always wake OpenClaw on stop — cooldown only applies to user-facing notifications
-        _openclaw.wake("stop", { sessionId, projectPath: directory });
-
         // Per-session cooldown: prevent notification spam when the session idles repeatedly.
         // Uses session-scoped state so one session does not suppress another.
         const stateDir = join(getOmcRoot(directory), "state");
@@ -917,8 +905,6 @@ async function processSessionStart(input: HookInput): Promise<HookOutput> {
         }).catch(() => {}),
       )
       .catch(() => {});
-    // Wake OpenClaw gateway for session-start (non-blocking)
-    _openclaw.wake("session-start", { sessionId, projectPath: directory });
   }
 
   // Start reply listener daemon if configured (non-blocking, swallows errors)
@@ -1159,25 +1145,6 @@ export const _notify = {
   askUserQuestion: dispatchAskUserQuestionNotification,
 };
 
-/**
- * @internal Object wrapper for OpenClaw gateway dispatch.
- * Mirrors the _notify pattern for testability (tests spy on _openclaw.wake
- * instead of mocking dynamic imports).
- *
- * Fire-and-forget: the lazy import + double .catch() ensures OpenClaw
- * never blocks hooks or surfaces errors.
- */
-export const _openclaw = {
-  wake: (
-    event: import("../openclaw/types.js").OpenClawHookEvent,
-    context: import("../openclaw/types.js").OpenClawContext,
-  ) => {
-    if (process.env.OMC_OPENCLAW !== "1") return;
-    import("../openclaw/index.js")
-      .then(({ wakeOpenClaw }) => wakeOpenClaw(event, context).catch(() => {}))
-      .catch(() => {});
-  },
-};
 
 /**
  * Process pre-tool-use hook
@@ -1324,22 +1291,6 @@ function processPreToolUse(input: HookInput): HookOutput {
   // Fire-and-forget: notify users that input is needed BEFORE the tool blocks
   if (input.toolName === "AskUserQuestion" && input.sessionId) {
     _notify.askUserQuestion(input.sessionId, directory, input.toolInput);
-    // Wake OpenClaw gateway for ask-user-question (non-blocking)
-    _openclaw.wake("ask-user-question", {
-      sessionId: input.sessionId,
-      projectPath: directory,
-      question: (() => {
-        const ti = input.toolInput as
-          | { questions?: Array<{ question?: string }> }
-          | undefined;
-        return (
-          ti?.questions
-            ?.map((q) => q.question || "")
-            .filter(Boolean)
-            .join("; ") || ""
-        );
-      })(),
-    });
   }
 
   // Activate skill state when Skill tool is invoked (issue #1033)
@@ -1490,17 +1441,6 @@ function processPreToolUse(input: HookInput): HookOutput {
     }
   }
 
-  // Wake OpenClaw gateway for pre-tool-use (non-blocking, fires only for allowed tools).
-  // AskUserQuestion already has a dedicated high-signal OpenClaw event.
-  if (input.sessionId && input.toolName !== "AskUserQuestion") {
-    _openclaw.wake("pre-tool-use", {
-      sessionId: input.sessionId,
-      projectPath: directory,
-      toolName: input.toolName,
-      toolInput: input.toolInput,
-    });
-  }
-
   return {
     continue: true,
     ...(preToolMessages.length > 0
@@ -1621,18 +1561,6 @@ async function processPostToolUse(input: HookInput): Promise<HookOutput> {
     if (dashboard) {
       messages.push(dashboard);
     }
-  }
-
-  // Wake OpenClaw gateway for post-tool-use (non-blocking, fires for all tools).
-  // AskUserQuestion already emitted a dedicated question.requested signal.
-  if (input.sessionId && input.toolName !== "AskUserQuestion") {
-    _openclaw.wake("post-tool-use", {
-      sessionId: input.sessionId,
-      projectPath: directory,
-      toolName: input.toolName,
-      toolInput: input.toolInput,
-      toolOutput: input.toolOutput,
-    });
   }
 
   if (messages.length > 0) {
@@ -1776,11 +1704,6 @@ export async function processHook(
           reason: (rawSE.reason as SessionEndInput["reason"]) ?? "other",
         };
         const result = await handleSessionEnd(sessionEndInput);
-        _openclaw.wake("session-end", {
-          sessionId: sessionEndInput.session_id,
-          projectPath: sessionEndInput.cwd,
-          reason: sessionEndInput.reason,
-        });
         return result;
       }
 

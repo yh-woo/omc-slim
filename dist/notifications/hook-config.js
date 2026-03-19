@@ -2,7 +2,7 @@
  * Hook Notification Config Reader
  *
  * Reads omc_config.hook.json for user-customizable message templates.
- * Follows the OpenClaw config reader pattern (file-based, cached).
+ * File-based, cached config reader.
  */
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";

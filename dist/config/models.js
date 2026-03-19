@@ -157,6 +157,12 @@ export function isBedrock() {
     if (modelId && /^((us|eu|ap|global)\.anthropic\.|anthropic\.claude)/i.test(modelId)) {
         return true;
     }
+    if (modelId
+        && /^arn:aws(-[^:]+)?:bedrock:/i.test(modelId)
+        && /:(inference-profile|application-inference-profile)\//i.test(modelId)
+        && modelId.toLowerCase().includes('claude')) {
+        return true;
+    }
     return false;
 }
 /**

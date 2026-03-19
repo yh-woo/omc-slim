@@ -17,7 +17,6 @@ const MADMAX_FLAG = '--madmax';
 const YOLO_FLAG = '--yolo';
 const CLAUDE_BYPASS_FLAG = '--dangerously-skip-permissions';
 const NOTIFY_FLAG = '--notify';
-const OPENCLAW_FLAG = '--openclaw';
 const TELEGRAM_FLAG = '--telegram';
 const DISCORD_FLAG = '--discord';
 const SLACK_FLAG = '--slack';
@@ -53,41 +52,6 @@ export function extractNotifyFlag(args: string[]): { notifyEnabled: boolean; rem
   }
 
   return { notifyEnabled, remainingArgs };
-}
-
-/**
- * Extract the OMC-specific --openclaw flag from launch args.
- * Purely presence-based (like --madmax/--yolo):
- *   --openclaw        -> enable OpenClaw (OMC_OPENCLAW=1)
- *   --openclaw=true   -> enable OpenClaw
- *   --openclaw=false  -> disable OpenClaw
- *   --openclaw=1      -> enable OpenClaw
- *   --openclaw=0      -> disable OpenClaw
- *
- * Does NOT consume the next positional arg (no space-separated value).
- * This flag is stripped before passing args to Claude CLI.
- */
-export function extractOpenClawFlag(args: string[]): { openclawEnabled: boolean; remainingArgs: string[] } {
-  let openclawEnabled = false;
-  const remainingArgs: string[] = [];
-
-  for (const arg of args) {
-    if (arg === OPENCLAW_FLAG) {
-      // Bare --openclaw means enabled (does NOT consume next arg)
-      openclawEnabled = true;
-      continue;
-    }
-
-    if (arg.startsWith(`${OPENCLAW_FLAG}=`)) {
-      const val = arg.slice(OPENCLAW_FLAG.length + 1).toLowerCase();
-      openclawEnabled = val !== 'false' && val !== '0';
-      continue;
-    }
-
-    remainingArgs.push(arg);
-  }
-
-  return { openclawEnabled, remainingArgs };
 }
 
 /**
@@ -364,16 +328,8 @@ export async function launchCommand(args: string[]): Promise<void> {
     process.env.OMC_NOTIFY = '0';
   }
 
-  // Extract OMC-specific --openclaw flag (presence-based, no value consumption)
-  const { openclawEnabled, remainingArgs: argsAfterOpenclaw } = extractOpenClawFlag(remainingArgs);
-  if (openclawEnabled === true) {
-    process.env.OMC_OPENCLAW = '1';
-  } else if (openclawEnabled === false) {
-    process.env.OMC_OPENCLAW = '0';
-  }
-
   // Extract OMC-specific --telegram flag (presence-based)
-  const { telegramEnabled, remainingArgs: argsAfterTelegram } = extractTelegramFlag(argsAfterOpenclaw);
+  const { telegramEnabled, remainingArgs: argsAfterTelegram } = extractTelegramFlag(remainingArgs);
   if (telegramEnabled === true) {
     process.env.OMC_TELEGRAM = '1';
   } else if (telegramEnabled === false) {

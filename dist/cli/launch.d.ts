@@ -13,22 +13,6 @@ export declare function extractNotifyFlag(args: string[]): {
     remainingArgs: string[];
 };
 /**
- * Extract the OMC-specific --openclaw flag from launch args.
- * Purely presence-based (like --madmax/--yolo):
- *   --openclaw        -> enable OpenClaw (OMC_OPENCLAW=1)
- *   --openclaw=true   -> enable OpenClaw
- *   --openclaw=false  -> disable OpenClaw
- *   --openclaw=1      -> enable OpenClaw
- *   --openclaw=0      -> disable OpenClaw
- *
- * Does NOT consume the next positional arg (no space-separated value).
- * This flag is stripped before passing args to Claude CLI.
- */
-export declare function extractOpenClawFlag(args: string[]): {
-    openclawEnabled: boolean;
-    remainingArgs: string[];
-};
-/**
  * Extract the OMC-specific --telegram flag from launch args.
  * Purely presence-based:
  *   --telegram        -> enable Telegram notifications (OMC_TELEGRAM=1)

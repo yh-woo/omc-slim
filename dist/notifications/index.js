@@ -75,9 +75,6 @@ export async function notify(event, data) {
             incompleteTasks: data.incompleteTasks,
             agentName: data.agentName,
             agentType: data.agentType,
-            replyChannel: data.replyChannel ?? process.env.OPENCLAW_REPLY_CHANNEL ?? undefined,
-            replyTarget: data.replyTarget ?? process.env.OPENCLAW_REPLY_TARGET ?? undefined,
-            replyThread: data.replyThread ?? process.env.OPENCLAW_REPLY_THREAD ?? undefined,
         };
         // Capture tmux tail for events that benefit from it
         if (shouldIncludeTmuxTail(verbosity) &&
@@ -158,7 +155,7 @@ export async function notify(event, data) {
     }
 }
 export { sendCustomWebhook, sendCustomCli, dispatchCustomIntegrations, } from "./dispatcher.js";
-export { getCustomIntegrationsConfig, getCustomIntegrationsForEvent, hasCustomIntegrationsEnabled, detectLegacyOpenClawConfig, migrateLegacyOpenClawConfig, } from "./config.js";
+export { getCustomIntegrationsConfig, getCustomIntegrationsForEvent, hasCustomIntegrationsEnabled, } from "./config.js";
 export { CUSTOM_INTEGRATION_PRESETS, getPresetList, getPreset, isValidPreset, } from "./presets.js";
 export { TEMPLATE_VARIABLES, getVariablesForEvent, getVariableDocumentation, } from "./template-variables.js";
 export { validateCustomIntegration, checkDuplicateIds, sanitizeArgument, } from "./validation.js";

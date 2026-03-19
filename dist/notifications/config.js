@@ -723,68 +723,6 @@ export function getReplyConfig() {
     };
 }
 import { validateCustomIntegration, checkDuplicateIds } from "./validation.js";
-const LEGACY_OPENCLAW_CONFIG = join(getClaudeConfigDir(), "omc_config.openclaw.json");
-/**
- * Detect if legacy OpenClaw configuration exists.
- */
-export function detectLegacyOpenClawConfig() {
-    return existsSync(LEGACY_OPENCLAW_CONFIG);
-}
-/**
- * Read and migrate legacy OpenClaw config to new custom integration format.
- */
-export function migrateLegacyOpenClawConfig() {
-    if (!existsSync(LEGACY_OPENCLAW_CONFIG))
-        return null;
-    try {
-        const legacy = JSON.parse(readFileSync(LEGACY_OPENCLAW_CONFIG, "utf-8"));
-        // Get first gateway (legacy format supported multiple, we take the first)
-        const gateways = legacy.gateways;
-        if (!gateways || Object.keys(gateways).length === 0)
-            return null;
-        const gateway = Object.values(gateways)[0];
-        const gatewayName = Object.keys(gateways)[0];
-        // Get enabled hooks as events
-        const hooks = legacy.hooks;
-        const events = [];
-        if (hooks) {
-            for (const [hookName, hookConfig] of Object.entries(hooks)) {
-                if (hookConfig?.enabled) {
-                    // Normalize hook name to event name
-                    const eventName = hookName.replace(/([A-Z])/g, '-$1').toLowerCase();
-                    events.push(eventName);
-                }
-            }
-        }
-        const integration = {
-            id: `migrated-${gatewayName}`,
-            type: "webhook",
-            preset: "openclaw",
-            enabled: legacy.enabled !== false,
-            config: {
-                url: gateway.url || "",
-                method: gateway.method || "POST",
-                headers: gateway.headers || { "Content-Type": "application/json" },
-                bodyTemplate: JSON.stringify({
-                    event: "{{event}}",
-                    instruction: "Session {{sessionId}} {{event}}",
-                    timestamp: "{{timestamp}}",
-                    context: {
-                        projectPath: "{{projectPath}}",
-                        projectName: "{{projectName}}",
-                        sessionId: "{{sessionId}}"
-                    }
-                }, null, 2),
-                timeout: gateway.timeout || 10000,
-            },
-            events: events,
-        };
-        return integration;
-    }
-    catch {
-        return null;
-    }
-}
 /**
  * Read custom integrations configuration from .omc-config.json.
  */

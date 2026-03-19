@@ -20,10 +20,29 @@ _Don't learn Claude Code. Just use OMC._
 
 ## Quick Start
 
-**Step 1: Install**
+> **This is a slim fork** with OpenClaw integration removed for use in restricted corporate environments.
+
+**Step 1: Install (choose one method)**
+
+**Option A — Local path (recommended for quick setup)**
+
+Clone this repo to your machine, then point Claude Code at the local directory:
 
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode
+# Clone to a local directory
+git clone <this-repo-url> ~/omc-slim
+
+# In Claude Code, add the local directory as a marketplace
+/plugin marketplace add ~/omc-slim
+/plugin install oh-my-claudecode
+```
+
+**Option B — Internal git repo**
+
+Push this repo to your company's internal Git (GitHub Enterprise, GitLab, etc.), then:
+
+```bash
+/plugin marketplace add https://git.yourcompany.com/your-team/omc-slim
 /plugin install oh-my-claudecode
 ```
 
@@ -117,17 +136,18 @@ npm i -g oh-my-claude-sisyphus@latest
 
 > **Package naming note:** the repo, plugin, and commands are branded **oh-my-claudecode**, but the published npm package name remains `oh-my-claude-sisyphus`.
 
-If you installed OMC via the Claude Code marketplace/plugin flow, update with:
+If you installed OMC via the Claude Code marketplace/plugin flow (slim fork), update with:
 
 ```bash
-# 1. Update the marketplace clone
+# 1. Pull latest changes to your local clone (or internal repo)
+cd ~/omc-slim && git pull
+
+# 2. Update the marketplace in Claude Code
 /plugin marketplace update omc
 
-# 2. Re-run setup to refresh configuration
+# 3. Re-run setup to refresh configuration
 /omc-setup
 ```
-
-> **Note:** If marketplace auto-update is not enabled, you must manually run `/plugin marketplace update omc` to sync the latest version before running setup.
 
 If you experience issues after updating, clear the old plugin cache:
 

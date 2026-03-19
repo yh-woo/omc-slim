@@ -234,11 +234,6 @@ describe("Template Variables", () => {
 });
 describe("Presets", () => {
     describe("CUSTOM_INTEGRATION_PRESETS", () => {
-        it("contains openclaw preset", () => {
-            expect(CUSTOM_INTEGRATION_PRESETS.openclaw).toBeDefined();
-            expect(CUSTOM_INTEGRATION_PRESETS.openclaw.type).toBe("webhook");
-            expect(CUSTOM_INTEGRATION_PRESETS.openclaw.defaultConfig.method).toBe("POST");
-        });
         it("contains n8n preset", () => {
             expect(CUSTOM_INTEGRATION_PRESETS.n8n).toBeDefined();
             expect(CUSTOM_INTEGRATION_PRESETS.n8n.type).toBe("webhook");
@@ -257,9 +252,9 @@ describe("Presets", () => {
     });
     describe("getPreset", () => {
         it("returns preset by name", () => {
-            const preset = getPreset("openclaw");
+            const preset = getPreset("n8n");
             expect(preset).toBeDefined();
-            expect(preset?.name).toBe("OpenClaw Gateway");
+            expect(preset?.name).toBe("n8n Webhook");
         });
         it("returns undefined for unknown preset", () => {
             const preset = getPreset("unknown");

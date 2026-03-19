@@ -769,14 +769,12 @@ All notification platforms require activation via CLI flags per session:
 - `omc --discord` — Activates Discord notifications (sets `OMC_DISCORD=1`)
 - `omc --slack` — Activates Slack notifications (sets `OMC_SLACK=1`)
 - `omc --webhook` — Activates webhook notifications (sets `OMC_WEBHOOK=1`)
-- `omc --openclaw` — Activates OpenClaw gateway integration (sets `OMC_OPENCLAW=1`)
 
 Without these flags, configured platforms remain dormant. This prevents unwanted notifications during development while keeping configuration persistent.
 
 **Examples:**
 - `omc --telegram --discord` — Telegram + Discord active
 - `omc --telegram --slack --webhook` — Telegram + Slack + Webhook active
-- `omc --telegram --openclaw` — Telegram + OpenClaw active
 - `omc` — No notifications sent (all platforms require explicit activation)
 
 ---
@@ -932,56 +930,15 @@ Offer to send a test notification with the new template.
 
 ---
 
-## Related
-
-- `/oh-my-claudecode:configure-openclaw` — Configure OpenClaw gateway integration
-
 ---
 
-## Custom Integration (OpenClaw, n8n, CLI, etc.)
+## Custom Integration (n8n, CLI, etc.)
 
 Configure custom webhooks and CLI commands for services beyond the native Discord/Telegram/Slack integrations.
 
 ### Routing
 
-If the user says "custom integration", "openclaw", "n8n", "webhook", "cli command", or similar → follow this section.
-
-### Migration from OpenClaw
-
-If `~/.claude/omc_config.openclaw.json` exists, detect and offer migration:
-
-**Step 1: Detect Legacy Config**
-```bash
-LEGACY_CONFIG="$HOME/.claude/omc_config.openclaw.json"
-if [ -f "$LEGACY_CONFIG" ]; then
-  echo "LEGACY_FOUND=true"
-  # Check if already migrated
-  if jq -e '.customIntegrations.integrations[] | select(.preset == "openclaw")' "$CONFIG_FILE" >/dev/null 2>&1; then
-    echo "ALREADY_MIGRATED=true"
-  else
-    echo "ALREADY_MIGRATED=false"
-  fi
-else
-  echo "LEGACY_FOUND=false"
-fi
-```
-
-**Step 2: Offer Migration**
-If legacy found and not migrated:
-
-**Question:** "Existing OpenClaw configuration detected. Would you like to migrate it to the new format?"
-
-**Options:**
-1. **Yes, migrate now** - Convert legacy config to custom integration
-2. **No, configure fresh** - Skip migration and start new
-3. **Show me the legacy config first** - Display current OpenClaw settings
-
-If migrate:
-- Read `omc_config.openclaw.json`
-- Transform to custom integration format
-- Save to `.omc-config.json`
-- Backup legacy to `omc_config.openclaw.json.bak`
-- Show success message
+If the user says "custom integration", "n8n", "webhook", "cli command", or similar → follow this section.
 
 ### Custom Integration Wizard
 
@@ -990,13 +947,12 @@ If migrate:
 **Question:** "Which type of custom integration would you like to configure?"
 
 **Options:**
-1. **OpenClaw Gateway** - Wake external automations and AI agents
-2. **n8n Webhook** - Trigger n8n workflows
-3. **ClawdBot** - Send notifications to ClawdBot
-4. **Generic Webhook** - Custom HTTPS webhook
-5. **Generic CLI Command** - Execute shell command on events
+1. **n8n Webhook** - Trigger n8n workflows
+2. **ClawdBot** - Send notifications to ClawdBot
+3. **Generic Webhook** - Custom HTTPS webhook
+4. **Generic CLI Command** - Execute shell command on events
 
-### OpenClaw/n8n/ClawdBot Preset Flow
+### n8n/ClawdBot Preset Flow
 
 **Step 2: Gateway URL**
 
@@ -1031,7 +987,6 @@ Use AskUserQuestion with multiSelect:
 - session-idle
 - ask-user-question
 
-Default for OpenClaw: session-start, session-end, stop
 Default for n8n: session-end, ask-user-question
 
 **Step 5: Test**
@@ -1065,9 +1020,9 @@ Merge into `.omc-config.json`:
     "enabled": true,
     "integrations": [
       {
-        "id": "my-openclaw",
+        "id": "my-webhook",
         "type": "webhook",
-        "preset": "openclaw",
+        "preset": "generic-webhook",
         "enabled": true,
         "config": {
           "url": "https://my-gateway.example.com/wake",

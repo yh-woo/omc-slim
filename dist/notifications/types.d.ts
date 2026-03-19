@@ -164,12 +164,6 @@ export interface NotificationPayload {
     tmuxTail?: string;
     /** Max meaningful lines to display from tmux tail */
     maxTailLines?: number;
-    /** Reply channel name (from OPENCLAW_REPLY_CHANNEL env var) */
-    replyChannel?: string;
-    /** Reply target (from OPENCLAW_REPLY_TARGET env var) */
-    replyTarget?: string;
-    /** Reply thread ID (from OPENCLAW_REPLY_THREAD env var) */
-    replyThread?: string;
 }
 /** Named notification profiles (keyed by profile name) */
 export type NotificationProfilesConfig = Record<string, NotificationConfig>;
@@ -231,7 +225,7 @@ export interface CustomIntegration {
     id: string;
     /** Integration type: webhook or cli */
     type: CustomIntegrationType;
-    /** Preset name if created from a preset (openclaw, n8n, etc.) */
+    /** Preset name if created from a preset (n8n, etc.) */
     preset?: string;
     /** Whether this integration is enabled */
     enabled: boolean;

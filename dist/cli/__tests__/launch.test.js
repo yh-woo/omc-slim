@@ -22,7 +22,7 @@ vi.mock('../tmux-utils.js', () => ({
     quoteShellArg: vi.fn((s) => s),
     isClaudeAvailable: vi.fn(() => true),
 }));
-import { runClaude, launchCommand, extractNotifyFlag, extractOpenClawFlag, extractTelegramFlag, extractDiscordFlag, extractSlackFlag, extractWebhookFlag, normalizeClaudeLaunchArgs } from '../launch.js';
+import { runClaude, launchCommand, extractNotifyFlag, extractTelegramFlag, extractDiscordFlag, extractSlackFlag, extractWebhookFlag, normalizeClaudeLaunchArgs } from '../launch.js';
 import { resolveLaunchPolicy, buildTmuxShellCommand, } from '../tmux-utils.js';
 // ---------------------------------------------------------------------------
 // extractNotifyFlag
@@ -389,66 +389,6 @@ describe('extractDiscordFlag', () => {
     });
 });
 // ---------------------------------------------------------------------------
-// extractOpenClawFlag
-// ---------------------------------------------------------------------------
-describe('extractOpenClawFlag', () => {
-    it('returns openclawEnabled=false with no --openclaw flag', () => {
-        const result = extractOpenClawFlag(['--madmax']);
-        expect(result.openclawEnabled).toBe(false);
-        expect(result.remainingArgs).toEqual(['--madmax']);
-    });
-    it('enables openclaw with bare --openclaw flag', () => {
-        const result = extractOpenClawFlag(['--openclaw']);
-        expect(result.openclawEnabled).toBe(true);
-        expect(result.remainingArgs).toEqual([]);
-    });
-    it('strips --openclaw from remainingArgs', () => {
-        const result = extractOpenClawFlag(['--madmax', '--openclaw', '--print']);
-        expect(result.openclawEnabled).toBe(true);
-        expect(result.remainingArgs).toEqual(['--madmax', '--print']);
-    });
-    it('bare --openclaw does NOT consume the next positional arg', () => {
-        const result = extractOpenClawFlag(['--openclaw', 'myfile.txt']);
-        expect(result.openclawEnabled).toBe(true);
-        // myfile.txt must remain as a positional arg
-        expect(result.remainingArgs).toEqual(['myfile.txt']);
-    });
-    it('enables openclaw with --openclaw=true', () => {
-        const result = extractOpenClawFlag(['--openclaw=true']);
-        expect(result.openclawEnabled).toBe(true);
-        expect(result.remainingArgs).toEqual([]);
-    });
-    it('enables openclaw with --openclaw=1', () => {
-        const result = extractOpenClawFlag(['--openclaw=1']);
-        expect(result.openclawEnabled).toBe(true);
-        expect(result.remainingArgs).toEqual([]);
-    });
-    it('disables openclaw with --openclaw=false', () => {
-        const result = extractOpenClawFlag(['--openclaw=false']);
-        expect(result.openclawEnabled).toBe(false);
-        expect(result.remainingArgs).toEqual([]);
-    });
-    it('disables openclaw with --openclaw=0', () => {
-        const result = extractOpenClawFlag(['--openclaw=0']);
-        expect(result.openclawEnabled).toBe(false);
-        expect(result.remainingArgs).toEqual([]);
-    });
-    it('handles --openclaw=FALSE (case insensitive)', () => {
-        const result = extractOpenClawFlag(['--openclaw=FALSE']);
-        expect(result.openclawEnabled).toBe(false);
-    });
-    it('returns openclawEnabled=false for empty args', () => {
-        const result = extractOpenClawFlag([]);
-        expect(result.openclawEnabled).toBe(false);
-        expect(result.remainingArgs).toEqual([]);
-    });
-    it('handles multiple flags correctly', () => {
-        const result = extractOpenClawFlag(['--madmax', '--openclaw', '--print', 'myfile.txt']);
-        expect(result.openclawEnabled).toBe(true);
-        expect(result.remainingArgs).toEqual(['--madmax', '--print', 'myfile.txt']);
-    });
-});
-// ---------------------------------------------------------------------------
 // extractSlackFlag
 // ---------------------------------------------------------------------------
 describe('extractSlackFlag', () => {
@@ -546,7 +486,7 @@ describe('extractWebhookFlag', () => {
 describe('launchCommand — env var propagation', () => {
     let processExitSpy;
     // Save original env values to restore after each test
-    const envKeys = ['OMC_NOTIFY', 'OMC_OPENCLAW', 'OMC_TELEGRAM', 'OMC_DISCORD', 'OMC_SLACK', 'OMC_WEBHOOK', 'CLAUDECODE'];
+    const envKeys = ['OMC_NOTIFY', 'OMC_TELEGRAM', 'OMC_DISCORD', 'OMC_SLACK', 'OMC_WEBHOOK', 'CLAUDECODE'];
     const savedEnv = {};
     beforeEach(() => {
         vi.resetAllMocks();
@@ -588,10 +528,6 @@ describe('launchCommand — env var propagation', () => {
         await launchCommand(['--webhook']);
         expect(process.env.OMC_WEBHOOK).toBe('1');
     });
-    it('bare --openclaw sets OMC_OPENCLAW to 1', async () => {
-        await launchCommand(['--openclaw']);
-        expect(process.env.OMC_OPENCLAW).toBe('1');
-    });
     it('--telegram=false overrides inherited OMC_TELEGRAM=1', async () => {
         process.env.OMC_TELEGRAM = '1';
         await launchCommand(['--telegram=false']);
@@ -612,11 +548,6 @@ describe('launchCommand — env var propagation', () => {
         await launchCommand(['--webhook=false']);
         expect(process.env.OMC_WEBHOOK).toBe('0');
     });
-    it('--openclaw=false overrides inherited OMC_OPENCLAW=1', async () => {
-        process.env.OMC_OPENCLAW = '1';
-        await launchCommand(['--openclaw=false']);
-        expect(process.env.OMC_OPENCLAW).toBe('0');
-    });
     it('--telegram=0 overrides inherited OMC_TELEGRAM=1', async () => {
         process.env.OMC_TELEGRAM = '1';
         await launchCommand(['--telegram=0']);
@@ -634,7 +565,7 @@ describe('launchCommand — env var propagation', () => {
         expect(process.env.OMC_WEBHOOK).toBe('1');
     });
     it('OMC flags are stripped from args passed to Claude', async () => {
-        await launchCommand(['--telegram', '--discord', '--slack', '--webhook', '--openclaw', '--print']);
+        await launchCommand(['--telegram', '--discord', '--slack', '--webhook', '--print']);
         const calls = vi.mocked(execFileSync).mock.calls;
         const claudeCall = calls.find(([cmd]) => cmd === 'claude');
         expect(claudeCall).toBeDefined();
@@ -643,7 +574,6 @@ describe('launchCommand — env var propagation', () => {
         expect(claudeArgs).not.toContain('--discord');
         expect(claudeArgs).not.toContain('--slack');
         expect(claudeArgs).not.toContain('--webhook');
-        expect(claudeArgs).not.toContain('--openclaw');
         expect(claudeArgs).toContain('--print');
     });
 });
